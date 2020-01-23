@@ -68,6 +68,8 @@ namespace restapi.Controllers
             return timecard;
         }
 
+        //both timecard persons and approvers can delete timesheets
+        //only the state of timesheet is "draft" or "cancelled" can be deleted
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -82,6 +84,7 @@ namespace restapi.Controllers
                 return NotFound();
             }
 
+            //if timecard is not in state of "draft" or "cancelled", return IncalidStateError
             if (timecard.CanBeDeleted() == false)
             {
                 return StatusCode(409, new InvalidStateError() { });
@@ -116,6 +119,7 @@ namespace restapi.Controllers
             }
         }
 
+        //only submitter can post new lines in their time sheets which is in "draft" state
         [HttpPost("{id:guid}/lines")]
         [Produces(ContentTypes.TimesheetLine)]
         [ProducesResponseType(typeof(TimecardLine), 200)]
@@ -129,6 +133,7 @@ namespace restapi.Controllers
 
             if (timecard != null)
             {
+                //if timecard state is not "draft" return InvalidStateError
                 if (timecard.Status != TimecardStatus.Draft)
                 {
                     return StatusCode(409, new InvalidStateError() { });
@@ -375,6 +380,9 @@ namespace restapi.Controllers
             }
         }
 
+        //Only approver can approve timesheets
+        //timesheets can only be approved when it is in "submit" status
+        //
         [HttpPost("{id:guid}/approval")]
         [Produces(ContentTypes.Transition)]
         [ProducesResponseType(typeof(Transition), 200)]
@@ -443,6 +451,8 @@ namespace restapi.Controllers
             }
         }
 
+        //submitter can replace lines in their timesheets when the timesheets are in "draft state
+        //**I didnt find update (or is it same to AddLine?), so I try to implemented my own...**
         [HttpGet("{id:guid}/lines/{lineId}")]
         [Produces(ContentTypes.Transition)]
         [ProducesResponseType(200)]
@@ -454,6 +464,7 @@ namespace restapi.Controllers
 
             if (timecard == null) return NotFound();
 
+            //if the timecare is not in draft state, return InvalidState
             if(timecard.Status != TimecardStatus.Draft)
             {
                 return StatusCode(409, new InvalidStateError() { });
