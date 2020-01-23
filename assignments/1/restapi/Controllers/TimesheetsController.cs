@@ -442,5 +442,25 @@ namespace restapi.Controllers
                 return NotFound();
             }
         }
+
+        [HttpGet("{id:guid}/lines/{lineId}")]
+        [Produces(ContentTypes.Transition)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(typeof(MissingTransitionError), 409)]
+        public IActionResult Update(Guid id, string lineId, [FromBody] TimecardLine tcl)
+        {
+            Timecard timecard = repository.Find(id);
+
+            if (timecard == null) return NotFound();
+
+            if(timecard.Status != TimecardStatus.Draft)
+            {
+                return StatusCode(409, new InvalidStateError() { });
+            }
+
+            var update = tcl.ReplaceLine(lineId, tcl);
+            return OK(update);
+        }
     }
 }
