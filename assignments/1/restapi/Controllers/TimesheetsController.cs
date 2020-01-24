@@ -82,7 +82,7 @@ namespace restapi.Controllers
                 return NotFound();
             }
 
-            if (timecard.CanBeDeleted() == false)
+            if (timecard.Status != TimecardStatus.Cancelled && timecard.Status != TimecardStatus.Draft)
             {
                 return StatusCode(409, new InvalidStateError() { });
             }
@@ -129,14 +129,13 @@ namespace restapi.Controllers
 
             if (timecard != null)
             {
+
                 if (timecard.Status != TimecardStatus.Draft)
                 {
                     return StatusCode(409, new InvalidStateError() { });
                 }
 
                 var annotatedLine = timecard.AddLine(documentLine);
-
-                repository.Update(timecard);
 
                 return Ok(annotatedLine);
             }
@@ -145,6 +144,7 @@ namespace restapi.Controllers
                 return NotFound();
             }
         }
+    }
 
         [HttpGet("{id:guid}/transitions")]
         [Produces(ContentTypes.Transitions)]
